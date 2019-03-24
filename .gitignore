@@ -1,9 +1,6 @@
 DeblurGAN.iml
-encodings.xml
-misc.xml
-modules.xml
-vcs.xml
-workspace.xml
+*.xml
 *.pyc
 *.png
 *.txt
+*.pth
