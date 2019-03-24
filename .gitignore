@@ -1,6 +1,8 @@
-DeblurGAN.iml
+*.iml
+*.iml
 *.xml
 *.pyc
 *.png
 *.txt
 *.pth
+*.html
