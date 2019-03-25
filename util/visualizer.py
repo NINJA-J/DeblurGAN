@@ -8,18 +8,28 @@ from . import html
 class Visualizer():
     def __init__(self, opt):
         # self.opt = opt
+
+        # default = 1
         self.display_id = opt.display_id
+        # default = True & not false = True
         self.use_html = opt.isTrain and not opt.no_html
+        # default = 256
         self.win_size = opt.display_winsize
+        # default = experiment_name
         self.name = opt.name
+
         if self.display_id > 0:
             import visdom
             self.vis = visdom.Visdom(port = opt.display_port)
+            # default = 0
             self.display_single_pane_ncols = opt.display_single_pane_ncols
 
         if self.use_html:
+            # default = ./checkpoints / experiment_name / web
             self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
+            # default = ./checkpoints / experiment_name / web / images
             self.img_dir = os.path.join(self.web_dir, 'images')
+
             print('create web directory %s...' % self.web_dir)
             util.mkdirs([self.web_dir, self.img_dir])
         self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
@@ -58,17 +68,14 @@ class Visualizer():
                 if label_html_row != '':
                     label_html += '<tr>%s</tr>' % label_html_row
                 # pane col = image row
-                self.vis.images(images, nrow=ncols, win=self.display_id + 1,
-                                padding=2, opts=dict(title=title + ' images'))
+                self.vis.images(images, nrow=ncols, win=self.display_id + 1, padding=2, opts=dict(title=title + ' images'))
                 label_html = '<table>%s</table>' % label_html
-                self.vis.text(table_css + label_html, win = self.display_id + 2,
-                              opts=dict(title=title + ' labels'))
+                self.vis.text(table_css + label_html, win = self.display_id + 2, opts=dict(title=title + ' labels'))
             else:
                 idx = 1
                 for label, image_numpy in visuals.items():
                     #image_numpy = np.flipud(image_numpy)
-                    self.vis.image(image_numpy.transpose([2,0,1]), opts=dict(title=label),
-                                       win=self.display_id + idx)
+                    self.vis.image(image_numpy.transpose([2, 0, 1]), opts=dict(title=label), win=self.display_id + idx)
                     idx += 1
 
         if self.use_html: # save images to a html file
