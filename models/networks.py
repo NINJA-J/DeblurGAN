@@ -44,17 +44,9 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropo
     if which_model_netG == 'resnet_9blocks':
         netG = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9,
                                gpu_ids=gpu_ids, use_parallel=use_parallel, learn_residual=learn_residual)
-    elif which_model_netG == 'resnet_6blocks':
-        netG = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6,
-                               gpu_ids=gpu_ids, use_parallel=use_parallel, learn_residual=learn_residual)
-    elif which_model_netG == 'unet_128':
-        netG = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                             gpu_ids=gpu_ids, use_parallel=use_parallel, learn_residual=learn_residual)
-    elif which_model_netG == 'unet_256':
-        netG = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                             gpu_ids=gpu_ids, use_parallel=use_parallel, learn_residual=learn_residual)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
+
     if len(gpu_ids) > 0:
         netG.cuda(gpu_ids[0])
     netG.apply(weights_init)
@@ -100,15 +92,22 @@ def print_network(net):
 # downsampling/upsampling operations.
 # Code and idea originally from Justin Johnson's architecture.
 # https://github.com/jcjohnson/fast-neural-style/
+
+class Generator(nn.Module):
+    def __init__(self, iNC, oNC, uDropout, uParallel):
+        super(Generator, self).__init__()
+
+
 class ResnetGenerator(nn.Module):
     def __init__(
+            # input N Channel
             self, input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False,
             n_blocks=6, gpu_ids=[], use_parallel=True, learn_residual=False, padding_type='reflect'):
         assert (n_blocks >= 0)
         super(ResnetGenerator, self).__init__()
-        self.input_nc = input_nc
-        self.output_nc = output_nc
-        self.ngf = ngf
+        # self.input_nc = input_nc
+        # self.output_nc = output_nc
+        # self.ngf = ngf
         self.gpu_ids = gpu_ids
         self.use_parallel = use_parallel
         self.learn_residual = learn_residual
@@ -128,14 +127,6 @@ class ResnetGenerator(nn.Module):
         n_downsampling = 2
 
         # 下采样
-        # for i in range(n_downsampling): # [0,1]
-        # 	mult = 2**i
-        #
-        # 	model += [
-        # 		nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias),
-        # 		norm_layer(ngf * mult * 2),
-        # 		nn.ReLU(True)
-        # 	]
 
         model += [
             nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=use_bias),
@@ -150,26 +141,11 @@ class ResnetGenerator(nn.Module):
         # 中间的残差网络
         # mult = 2**n_downsampling
         for i in range(n_blocks):
-            # model += [
-            # 	ResnetBlock(
-            # 		ngf * mult, padding_type=padding_type, norm_layer=norm_layer,
-            # 		use_dropout=use_dropout, use_bias=use_bias)
-            # ]
             model += [
                 ResnetBlock(256, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
             ]
 
         # 上采样
-        # for i in range(n_downsampling):
-        # 	mult = 2**(n_downsampling - i)
-        #
-        # 	model += [
-        # 		nn.ConvTranspose2d(
-        # 			ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2,
-        # 			padding=1, output_padding=1, bias=use_bias),
-        # 		norm_layer(int(ngf * mult / 2)),
-        # 		nn.ReLU(True)
-        # 	]
         model += [
             nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, output_padding=1, bias=use_bias),
             norm_layer(128),

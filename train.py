@@ -1,10 +1,11 @@
 import time
 from options.train_options import TrainOptions
-from data.data_loader import CreateDataLoader
+# from data.data_loader import CreateDataLoader
 from models.models import create_model
 from util.visualizer import Visualizer
 from util.metrics import PSNR, SSIM
 from multiprocessing import freeze_support
+from data.custom_dataset_data_loader import CustomDatasetDataLoader
 
 def train(opt, data_loader, model, visualizer):
 	dataset = data_loader.load_data()
@@ -36,6 +37,7 @@ def train(opt, data_loader, model, visualizer):
 
 			if total_steps % opt.save_latest_freq == 0:
 				print('saving the latest model (epoch %d, total_steps %d)' % (epoch, total_steps))
+
 				model.save('latest')
 
 		if epoch % opt.save_epoch_freq == 0:
@@ -68,7 +70,7 @@ if __name__ == '__main__':
 	# default = 100
 	opt.print_freq = 20
 
-	data_loader = CreateDataLoader(opt)
+	data_loader = CustomDatasetDataLoader(opt)
 	model = create_model(opt)
 	visualizer = Visualizer(opt)
 	train(opt, data_loader, model, visualizer)

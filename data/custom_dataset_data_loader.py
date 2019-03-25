@@ -1,43 +1,24 @@
 import torch.utils.data
-from data.base_data_loader import BaseDataLoader
+from data.aligned_dataset import AlignedDataset
 
-
-def CreateDataset(opt):
-    dataset = None
-    if opt.dataset_mode == 'aligned':
-        from data.aligned_dataset import AlignedDataset
-        dataset = AlignedDataset(opt)
-    elif opt.dataset_mode == 'unaligned':
-        from data.unaligned_dataset import UnalignedDataset
-        dataset = UnalignedDataset()
-    elif opt.dataset_mode == 'single':
-        from data.single_dataset import SingleDataset
-        dataset = SingleDataset()
-    else:
-        raise ValueError("Dataset [%s] not recognized." % opt.dataset_mode)
-
-    print("dataset [%s] was created" % (dataset.name()))
-    # dataset.initialize(opt)
-    return dataset
-
-
-class CustomDatasetDataLoader(BaseDataLoader):
+class CustomDatasetDataLoader:
     def name(self):
-        return 'CustomDatasetDataLoader'
+        return 'CustomDataSetDataLoader'
 
     def __init__(self, opt):
-        super(CustomDatasetDataLoader,self).initialize(opt)
         print("Opt.nThreads = ", opt.nThreads)
-        self.dataset = CreateDataset(opt)
-        self.dataloader = torch.utils.data.DataLoader(
-            self.dataset,
+
+        self.opt = opt
+        self.dataSet = AlignedDataset(opt)
+        self.dataLoader = torch.utils.data.DataLoader(
+            self.dataSet,
             batch_size=opt.batchSize,
             shuffle=not opt.serial_batches,
             num_workers=int(opt.nThreads)
         )
 
     def load_data(self):
-        return self.dataloader
+        return self.dataLoader
 
     def __len__(self):
-        return min(len(self.dataset), self.opt.max_dataset_size)
+        return min(len(self.dataSet), self.opt.max_dataset_size)
